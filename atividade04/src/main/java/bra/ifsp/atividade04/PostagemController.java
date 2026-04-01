@@ -4,7 +4,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -12,83 +11,35 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/postagens")
 public class PostagemController {
-    
-    // Lista em memória para simular um banco de dados
-    private List<Postagem> bancoDeDados = new ArrayList<>();
-    private Long proximoId = 1L;
 
-    // 1. GET /postagens
+    private static List<Postagem> bancoDadosFake = new ArrayList<>();
+    private static Long proximoId = 1L;
+
     @GetMapping
-    public ResponseEntity<List<Postagem>> listarTodos() {
-        return ResponseEntity.status(HttpStatus.OK).body(bancoDeDados);
+    public List<Postagem> listar() {
+        return bancoDadosFake;
     }
 
-    // 2. POST /postagens 
     @PostMapping
-    public ResponseEntity<Postagem> adicionar(@RequestBody Postagem novaPostagem) {
-        novaPostagem.setId(proximoId++);
-        
-        if (novaPostagem.getDataCriacao() == null) {
-            novaPostagem.setDataCriacao(LocalDate.now());
-        }
-        
-        bancoDeDados.add(novaPostagem);
-        
-        //retorna 201 se criado
-        return ResponseEntity.status(HttpStatus.CREATED).body(novaPostagem);
+    public ResponseEntity<Postagem> criar(@RequestBody Postagem postagem) {
+        postagem.setId(proximoId++);
+        bancoDadosFake.add(postagem);
+        return new ResponseEntity<>(postagem, HttpStatus.CREATED);
     }
 
-    // 3. GET /postagens/{id}
     @GetMapping("/{id}")
-    public ResponseEntity<Postagem> buscarPorId(@PathVariable Long id) {
-        Optional<Postagem> postagemEncontrada = bancoDeDados.stream()
+    public ResponseEntity<Postagem> buscar(@PathVariable Long id) {
+        Optional<Postagem> post = bancoDadosFake.stream()
                 .filter(p -> p.getId().equals(id))
                 .findFirst();
 
-        if (postagemEncontrada.isPresent()) {
-            return ResponseEntity.status(HttpStatus.OK).body(postagemEncontrada.get());
-        } else {
-            // Retorna 404 
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
+        return post.map(ResponseEntity::ok)
+                   .orElse(ResponseEntity.notFound().build());
     }
 
-    // 4. PUT /postagens/{id}
-    @PutMapping("/{id}")
-    public ResponseEntity<Postagem> atualizar(@PathVariable Long id, @RequestBody Postagem postagemAtualizada) {
-        for (int i = 0; i < bancoDeDados.size(); i++) {
-            Postagem postagemAtual = bancoDeDados.get(i);
-            
-            if (postagemAtual.getId().equals(id)) {
-                // Atualiza os dados
-                postagemAtual.setTitulo(postagemAtualizada.getTitulo());
-                postagemAtual.setConteudo(postagemAtualizada.getConteudo());
-                postagemAtual.setDataCriacao(postagemAtualizada.getDataCriacao());
-                
-                return ResponseEntity.status(HttpStatus.OK).body(postagemAtual);
-            }
-        }
-        
-        // Retorna 404 se n achar
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-    }
-
-    // 5. DELETE /postagens/{id}
     @DeleteMapping("/{id}")
-    public ResponseEntity<Postagem> deletar(@PathVariable Long id) {
-        for (int i = 0; i < bancoDeDados.size(); i++) {
-            Postagem postagem = bancoDeDados.get(i);
-            
-            if (postagem.getId().equals(id)) {
-                bancoDeDados.remove(i);
-            
-                postagem.setTitulo("Postagem removida");
-                postagem.setConteudo("Conteúdo removido");
-                
-                return ResponseEntity.status(HttpStatus.OK).body(postagem);
-            }
-        }
-        
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    public ResponseEntity<Void> deletar(@PathVariable Long id) {
+        boolean removido = bancoDadosFake.removeIf(p -> p.getId().equals(id));
+        return removido ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
     }
 }
