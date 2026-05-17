@@ -6,9 +6,9 @@ enum Episode{
     JEDI
 }
 
-interface Character{ # outros tipos herdarão seus atríbutos
-    id: ID! # tipo que representa um ID não nulo
-    name: String! # aceita string não null
+interface Character{
+    id: ID!
+    name: String!
     appearsIn: [Episode]! # aceita uma lista de Episodes não nulos
     friends: [Character] # aceita lista de Characters. Podem ser nulos
 }
@@ -52,10 +52,8 @@ input ReviewInput{
 type Query {
     hero(episode: Episode): Character #Será o mesmo nome no método
     Java
-    droid(id: ID!): Droid # Será o mesmo nome no método Java
-    search(text: String!): [SearchResult!]! # Será o mesmo nome no
-    método Java. Retornará uma UNION
-    # Queries dos exs
+    droid(id: ID!): Droid
+    search(text: String!): [SearchResult!]!
     humans: [Human!]!
     starships: [Starship!]!
     character(id: ID!): Character
